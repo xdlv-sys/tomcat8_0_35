@@ -28,6 +28,11 @@ if ""%1"" == ""debug"" goto needJavaHome
 rem Otherwise either JRE or JDK are fine
 if not "%JRE_HOME%" == "" goto gotJreHome
 if not "%JAVA_HOME%" == "" goto gotJavaHome
+
+rem try to load current jdk
+set "JAVA_HOME=%CURRENT_DIR%\..\..\jdk"
+goto gotJavaHome
+
 echo Neither the JAVA_HOME nor the JRE_HOME environment variable is defined
 echo At least one of these environment variable is needed to run this program
 goto exit
