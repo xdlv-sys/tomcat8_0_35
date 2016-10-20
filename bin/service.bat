@@ -74,6 +74,9 @@ set "CATALINA_BASE=%CATALINA_HOME%"
 set "EXECUTABLE=%CATALINA_HOME%\bin\tomcat8.exe"
 
 rem Set default Service name
+set UPGRADE_PROXY=TomcatUpgrade
+set UPGRADE_PROXY_DISPLAY=Tomcat Upgrade Proxy
+
 set SERVICE_NAME=Tomcat8
 set DISPLAYNAME=Apache Tomcat 8.0 %SERVICE_NAME%
 
@@ -113,6 +116,9 @@ echo Using CATALINA_BASE:    "%CATALINA_BASE%"
 
 "%EXECUTABLE%" //DS//%SERVICE_NAME% ^
     --LogPath "%CATALINA_BASE%\logs"
+	
+"%EXECUTABLE%" //DS//%UPGRADE_PROXY% ^
+    --LogPath "%CATALINA_BASE%\logs"	
 if not errorlevel 1 goto removed
 echo Failed removing '%SERVICE_NAME%' service
 goto end
@@ -162,6 +168,31 @@ if not "%CATALINA_HOME%" == "%CATALINA_BASE%" set "CLASSPATH=%CLASSPATH%;%CATALI
     --JvmOptions "-Dcatalina.home=%CATALINA_HOME%;-Dcatalina.base=%CATALINA_BASE%;-Djava.endorsed.dirs=%CATALINA_HOME%\endorsed;-Djava.io.tmpdir=%CATALINA_BASE%\temp;-Djava.util.logging.manager=org.apache.juli.ClassLoaderLogManager;-Djava.util.logging.config.file=%CATALINA_BASE%\conf\logging.properties" ^
     --JvmMs 128 ^
     --JvmMx 256
+
+
+set "CLASSPATH=%CATALINA_HOME%\bin\upgrade;%CATALINA_HOME%\bin\upgrade\upgrade.jar;%CATALINA_HOME%\bin\upgrade\slf4j-api-1.7.20.jar;%CATALINA_HOME%\bin\upgrade\logback-core-1.1.7.jar;%CATALINA_HOME%\bin\upgrade\logback-classic-1.1.7.jar;"
+
+echo "create Service update proxy"
+"%EXECUTABLE%" //IS//%UPGRADE_PROXY% ^
+    --Description "Apache Tomcat Upgrade Service" ^
+    --DisplayName "%UPGRADE_PROXY_DISPLAY%" ^
+    --Install "%EXECUTABLE%" ^
+    --LogPath "%CATALINA_BASE%\logs" ^
+    --StdOutput auto ^
+    --StdError auto ^
+    --Classpath "%CLASSPATH%" ^
+    --Jvm "%JVM%" ^
+    --StartMode jvm ^
+    --StopMode jvm ^
+    --StartPath "%CATALINA_HOME%" ^
+    --StopPath "%CATALINA_HOME%" ^
+    --StartClass xd.fw.mina.tlv.UpgradeProxyHook ^
+    --StopClass xd.fw.mina.tlv.UpgradeProxyHook ^
+    --StartParams start ^
+    --StopParams stop ^
+    --JvmOptions "-Dcatalina.base=%CATALINA_BASE%;" ^
+    --JvmMs 50 ^
+    --JvmMx 50
 if not errorlevel 1 goto installed
 echo Failed installing '%SERVICE_NAME%' service
 goto end
